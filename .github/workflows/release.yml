@@ -109,18 +109,22 @@ jobs:
           persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
           repository: vmware-tanzu/carvel-release-scripts
           ref: main
+          ssh-key: ${{ secrets.CARVEL_RELEASE_SCRIPTS_DEPLOY_PRIVATE_KEY }}
       - name: Download checksums
         uses: actions/download-artifact@v2
+        id: download-checksums
         with:
           name: checksums
+          path: ~/checksums
       - name: Update homebrew
         run: |
           VERSION=`echo ${{ github.ref }}  | grep -Eo '[0-9].*'`
 
+          tree ${{steps.download-checksums.outputs.download-path}}
           # EXAMPLE checksum line:
           # 0837efa4e30fc3f934479d1bd183cfd97ec96f7f3cfab0892be7f39308908993  imgpkg-linux-amd64
           function map_checksums_to_assets() {
-            cat ./checksums | while read line; do
+            cat ${{steps.download-checksums.outputs.download-path}}/go-checksums | while read line; do
               filename=$(echo $line | awk '{print $2}')
               os=$(echo $filename | awk -F\- '{print $2}')
               arch=$(echo $filename | awk -F\- '{print $3}' |  sed -e "s/\..*$//")
@@ -155,8 +159,6 @@ jobs:
           REPOSITORY: "vmware-tanzu/carvel-release-scripts"
           BRANCH: "imgpkg-homebrew"
           FORCE: true
-          GITHUB_TOKEN: ${{ secrets.CARVEL_RELEASE_SCRIPTS_PAT }}
-          GITHUB_DEPLOY_PRIVATE_KEY: ${{ secrets.CARVEL_RELEASE_SCRIPTS_DEPLOY_PRIVATE_KEY }}
         run: |
           set -e
 
@@ -174,26 +176,11 @@ jobs:
             exit 1;
           };
 
-          if [ -z "${GITHUB_TOKEN}" ] && [ -z "${GITHUB_DEPLOY_PRIVATE_KEY}" ]; then
-              echo 'Missing required input "github_token: ${{ secrets.GITHUB_TOKEN }} OR "github_deploy_private_key: ${{ secrets.GITHUB_DEPLOY_PRIVATE_KEY }}".';
-              exit 1;
-          fi
-
           if ${FORCE}; then
               _FORCE_OPTION='--force'
           fi
 
-          remote_repo="https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${REPOSITORY}.git"
-
-          if [ -n "${GITHUB_DEPLOY_PRIVATE_KEY}" ]; then
-            remote_repo="git@github.com:${REPOSITORY}"
-
-            tempkey=`basename $0`
-            TMP_DEPLOY_PRIV_KEY=`mktemp /tmp/${tempkey}.XXXXXX` || exit 1
-            echo "${GITHUB_DEPLOY_PRIVATE_KEY}" > $TMP_DEPLOY_PRIV_KEY
-            eval $(ssh-agent -s)
-            ssh-add ${TMP_DEPLOY_PRIV_KEY}
-          fi
+          remote_repo="git@github.com:${REPOSITORY}"
 
           git config http.sslVerify false
           git config --local user.email "${AUTHOR_EMAIL}"
