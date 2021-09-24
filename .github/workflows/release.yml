@@ -107,7 +107,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
-          repository: vmware-tanzu/homebrew-release-scripts
+          repository: vmware-tanzu/carvel-release-scripts
           ref: main
       - name: Download checksums
         uses: actions/download-artifact@v2
