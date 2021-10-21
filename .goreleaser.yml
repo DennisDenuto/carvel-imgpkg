@@ -30,7 +30,7 @@ builds:
 
     hooks:
       post:
-        - sh -c "echo $COSIGN_PWD | COSIGN_EXPERIMENTAL=1 cosign sign-blob --output-file dist/imgpkg-{{ .Os }}-{{ .Arch }}.crt --output  dist/imgpkg-{{ .Os }}-{{ .Arch }}.sig {{ .Path }}"
+        - sh -c "COSIGN_EXPERIMENTAL=1 cosign sign-blob --output  dist/imgpkg-{{ .Os }}-{{ .Arch }}.sig {{ .Path }} /tmp/blob 2>&1 | sed -n '/-----BEGIN CERTIFICATE-----/,/-----END CERTIFICATE-----/p' > dist/imgpkg-{{ .Os }}-{{ .Arch }}.crt"
 
 archives:
   - format: binary
@@ -49,6 +49,7 @@ snapshot:
 release:
   extra_files:
     - glob: dist/*.sig
+    - glob: dist/*.crt
 
   # Repo in which the release will be created.
   github:
