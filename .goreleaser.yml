@@ -28,6 +28,10 @@ builds:
       - -buildid=
       - -X github.com/k14s/imgpkg/pkg/imgpkg/cmd.Version={{ .Version }}
 
+    hooks:
+      post:
+        - sh -c "echo $COSIGN_PWD | COSIGN_EXPERIMENTAL=1 cosign sign-blob --output-file dist/imgpkg-{{ .Os }}-{{ .Arch }}.crt --output  dist/imgpkg-{{ .Os }}-{{ .Arch }}.sig {{ .Path }}"
+
 archives:
   - format: binary
     name_template: "{{ .Binary }}"
@@ -43,6 +47,9 @@ checksum:
 snapshot:
   name_template: "{{ .Tag }}-next"
 release:
+  extra_files:
+    - glob: dist/*.sig
+
   # Repo in which the release will be created.
   github:
     owner: DennisDenuto
