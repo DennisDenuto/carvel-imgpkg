@@ -26,10 +26,16 @@ jobs:
         uses: 'google-github-actions/auth@v0.3.1'
         env:
           PROJECT_ID: ${{ secrets.PROJECT_ID }}
+          PROJECT_ID_INT: ${{ secrets.PROJECT_ID_INT }}
         with:
           token_format: 'access_token'
-          workload_identity_provider: 'projects/${{ env.PROJECT_ID }}/locations/global/workloadIdentityPools/test-carvel-signing-release-pool/providers/test-carvel-github-provider'
+          workload_identity_provider: 'projects/${{ env.PROJECT_ID_INT }}/locations/global/workloadIdentityPools/test-carvel-signing-release-pool/providers/test-carvel-github-provider'
           service_account: test-kms-service-account@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
+
+      - id: 'gcloud'
+        name: 'gcloud'
+        run: |-
+          gcloud auth login --brief --cred-file="${{ steps.auth.outputs.credentials_file_path }}"
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@5e15885530fb01d81d1f24e8a6f54ebbd0fed7eb
