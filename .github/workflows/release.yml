@@ -28,7 +28,7 @@ jobs:
           PROJECT_ID: ${{ secrets.PROJECT_ID }}
         with:
           token_format: 'access_token'
-          workload_identity_provider: 'projects/${{ env.PROJECT_ID }}/locations/global/workloadIdentityPools/test-carvel-signing-release-pool/providers/test-carvel-github-provider'
+          workload_identity_provider: 'projects/${{ env.PROJECT_ID_INT }}/locations/global/workloadIdentityPools/test-carvel-signing-release-pool/providers/test-carvel-github-provider'
           service_account: test-kms-service-account@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
 
       - name: Run GoReleaser
