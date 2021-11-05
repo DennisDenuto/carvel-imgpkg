@@ -21,6 +21,34 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: 1.17.0
+
+      # Install gcloud, do not specify authentication.
+      - uses: 'google-github-actions/setup-gcloud@master'
+        env:
+          PROJECT_ID: ${{ secrets.PROJECT_ID }}
+        with:
+          project_id: ${{ secrets.PROJECT_ID }}
+
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v0.3.1'
+        env:
+          PROJECT_ID: ${{ secrets.PROJECT_ID }}
+          PROJECT_ID_INT: ${{ secrets.PROJECT_ID_INT }}
+          WORKLOAD_ID_POOL: ${{ secrets.WORKLOAD_ID_POOL }}
+          WORKLOAD_ID_POOL_PROVIDER: ${{ secrets.WORKLOAD_ID_POOL_PROVIDER }}
+          SERVICE_ACCOUNT_NAME: ${{ secrets.SERVICE_ACCOUNT_NAME }}
+        with:
+          token_format: 'access_token'
+          create_credentials_file: 'true'
+          workload_identity_provider: 'projects/${{ env.PROJECT_ID_INT }}/locations/global/workloadIdentityPools/${{ env.WORKLOAD_ID_POOL }}/providers/${{ env.WORKLOAD_ID_POOL_PROVIDER }}'
+          service_account: ${{ env.SERVICE_ACCOUNT_NAME }}@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
+
+      - id: 'gcloud'
+        name: 'gcloud'
+        run: |-
+          gcloud auth login --brief --cred-file="${{ steps.auth.outputs.credentials_file_path }}"
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@5e15885530fb01d81d1f24e8a6f54ebbd0fed7eb
         if: startsWith(github.ref, 'refs/tags/')
@@ -29,6 +57,11 @@ jobs:
           args: release --rm-dist --debug ${{ env.SKIP_PUBLISH }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROJECT_ID: ${{ secrets.PROJECT_ID }}
+          KEY_LOCATION: ${{ secrets.KEY_LOCATION }}
+          KEY_RING: ${{ secrets.KEY_RING }}
+          KEY_NAME: ${{ secrets.KEY_NAME }}
+          KEY_VERSION: ${{ secrets.KEY_VERSION }}
       - uses: actions/github-script@v4
         id: get-checksums-from-draft-release
         if: startsWith(github.ref, 'refs/tags/') && ${{ !env.ACT }}
