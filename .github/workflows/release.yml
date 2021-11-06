@@ -24,24 +24,21 @@ jobs:
 
       # Install gcloud, do not specify authentication.
       - uses: 'google-github-actions/setup-gcloud@v0.2.1'
-        env:
-          PROJECT_ID: ${{ secrets.PROJECT_ID }}
         with:
-          project_id: ${{ secrets.PROJECT_ID }}
+          project_id: ${{ secrets.PROJECT_ID_INT }}
 
       - id: 'auth'
         name: 'Authenticate to Google Cloud'
         uses: 'google-github-actions/auth@v0.3.1'
         env:
-          PROJECT_ID: ${{ secrets.PROJECT_ID }}
-          PROJECT_ID_INT: ${{ secrets.PROJECT_ID_INT }}
+          PROJECT_ID: ${{ secrets.PROJECT_ID_INT }}
           WORKLOAD_ID_POOL: ${{ secrets.WORKLOAD_ID_POOL }}
           WORKLOAD_ID_POOL_PROVIDER: ${{ secrets.WORKLOAD_ID_POOL_PROVIDER }}
           SERVICE_ACCOUNT_NAME: ${{ secrets.SERVICE_ACCOUNT_NAME }}
         with:
           token_format: 'access_token'
           create_credentials_file: 'true'
-          workload_identity_provider: 'projects/${{ env.PROJECT_ID_INT }}/locations/global/workloadIdentityPools/${{ env.WORKLOAD_ID_POOL }}/providers/${{ env.WORKLOAD_ID_POOL_PROVIDER }}'
+          workload_identity_provider: 'projects/${{ env.PROJECT_ID }}/locations/global/workloadIdentityPools/${{ env.WORKLOAD_ID_POOL }}/providers/${{ env.WORKLOAD_ID_POOL_PROVIDER }}'
           service_account: ${{ env.SERVICE_ACCOUNT_NAME }}@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
 
       - id: 'gcloud'
@@ -57,7 +54,7 @@ jobs:
           args: release --rm-dist --debug ${{ env.SKIP_PUBLISH }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PROJECT_ID: ${{ secrets.PROJECT_ID }}
+          PROJECT_ID: ${{ secrets.PROJECT_ID_INT }}
           KEY_LOCATION: ${{ secrets.KEY_LOCATION }}
           KEY_RING: ${{ secrets.KEY_RING }}
           KEY_NAME: ${{ secrets.KEY_NAME }}
